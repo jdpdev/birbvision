@@ -24,7 +24,7 @@ print("  epochs: ", epochs)
 print("  batch size: ", batch_size)
 print("  image size: ", IMG_SIZE)
 
-resize_and_rescale = tf.keras.Sequential([
+sequential_resize_and_rescale = tf.keras.Sequential([
   layers.experimental.preprocessing.Resizing(IMG_SIZE, IMG_SIZE),
   layers.experimental.preprocessing.Rescaling(1./255)
 ])
@@ -51,9 +51,11 @@ def augment(image_label, seed):
   return image, label
 
 def preprocess_ds(ds, train = False):
+  if train:
+    ds = ds.shuffle(1000)
+
   return (
     ds
-    .shuffle(1000)
     .map(augment if train else resize_and_rescale, num_parallel_calls=AUTOTUNE)
     .batch(batch_size)
     .prefetch(AUTOTUNE)
@@ -68,7 +70,8 @@ def configure_for_performance(ds):
 
 # load caltech_birds2011 dataset
 (train_ds, val_ds, test_ds), metadata = tfds.load(
-    'caltech_birds2011',
+    #'caltech_birds2011',
+    'tf_flowers',
     split=['train[:80%]', 'train[80%:90%]', 'train[90%:]'],
     with_info=True,
     as_supervised=True,
@@ -86,9 +89,15 @@ plt.show()
 """
 #"""
 
-train_ds = preprocess_ds(train_ds)
+counter = tf.data.experimental.Counter()
+train_ds = tf.data.Dataset.zip((train_ds, (counter, counter)))
+
+train_ds = preprocess_ds(train_ds, True)
 val_ds = preprocess_ds(val_ds)
 test_ds = preprocess_ds(test_ds)
+#train_ds = configure_for_performance(train_ds)
+#val_ds = configure_for_performance(val_ds)
+#test_ds = configure_for_performance(test_ds)
 
 data_augmentation = tf.keras.Sequential([
     layers.experimental.preprocessing.RandomFlip("horizontal", 
@@ -100,7 +109,8 @@ data_augmentation = tf.keras.Sequential([
 ])
 
 model = tf.keras.Sequential([
-  data_augmentation,
+  #sequential_resize_and_rescale,
+  #data_augmentation,
   layers.Conv2D(16, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
   layers.Conv2D(32, 3, padding='same', activation='relu'),
@@ -125,7 +135,8 @@ history =model.fit(
 )
 #"""
 
-model.save("model/birbmodel")
+#model.save("model/birbmodel")
+model.save("model/flowermodel")
 
 
 acc = history.history['accuracy']
