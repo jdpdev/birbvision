@@ -6,10 +6,23 @@ import tensorflow as tf
 import tensorflow_datasets as tfds
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
+import argparse
 
-batch_size = 32
-IMG_SIZE = 180
+parser = argparse.ArgumentParser(description='Build the birbvision model from scratch.')
+parser.add_argument('-e', '--epochs', type=int, nargs='?', const=1, default=15)
+parser.add_argument('-b', '--batchsize', type=int, nargs='?', const=1, default=32)
+parser.add_argument('-i', '--imagesize', type=int, nargs='?', const=1, default=180)
+args = parser.parse_args()
+
+epochs = args.epochs
+batch_size = args.batchsize
+IMG_SIZE = args.imagesize
 AUTOTUNE = tf.data.AUTOTUNE
+
+print("Building model with...")
+print("  epochs: ", epochs)
+print("  batch size: ", batch_size)
+print("  image size: ", IMG_SIZE)
 
 resize_and_rescale = tf.keras.Sequential([
   layers.experimental.preprocessing.Resizing(IMG_SIZE, IMG_SIZE),
@@ -37,11 +50,11 @@ def augment(image_label, seed):
   image = tf.clip_by_value(image, 0, 1)
   return image, label
 
-def preprocess_ds(ds):
+def preprocess_ds(ds, train = False):
   return (
     ds
     .shuffle(1000)
-    .map(augment, num_parallel_calls=AUTOTUNE)
+    .map(augment if train else resize_and_rescale, num_parallel_calls=AUTOTUNE)
     .batch(batch_size)
     .prefetch(AUTOTUNE)
   )
@@ -105,7 +118,6 @@ model.compile(
   loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
   metrics=['accuracy'])
 
-epochs = 15
 history =model.fit(
   train_ds,
   validation_data=val_ds,
