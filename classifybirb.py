@@ -10,8 +10,8 @@ def load_labels(filename):
   with open(filename, 'r') as f:
     return [line.strip() for line in f.readlines()]
 
-interpreter = Interpreter(model_path="./model/aily/lite-model_aiy_vision_classifier_birds_V1_3.tflite")
-labels = load_labels("./model/aily/probability-labels-en.txt")
+interpreter = Interpreter(model_path="./model/aiy/lite-model_aiy_vision_classifier_birds_V1_3.tflite")
+labels = load_labels("./model/aiy/probability-labels-en.txt")
 
 interpreter.allocate_tensors()
 
@@ -57,8 +57,8 @@ def classify_array(image):
     return top_matches
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Build the birbvision model from scratch.')
-    parser.add_argument('path', help="Name of the file to load from birbstorage")
+    parser = argparse.ArgumentParser(description='Classify an image.')
+    parser.add_argument('path', help="Path of the file to classify")
     args = parser.parse_args()
 
     print(f"Classifying: {args.path}")
