@@ -1,4 +1,4 @@
-from .classifybirb import load_and_classify
+from .classifybirb import ClassifyBird
 import argparse
 
 if __name__ == "__main__":
@@ -7,7 +7,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print(f"Classifying: {args.path}")
-    matches = load_and_classify(args.path)
+    classifier = ClassifyBird()
+    matches = classifier.classify_path(args.path)
 
     for match in matches:
-        print(f"{match[0]}: {match[1]}")
+        print(f"{match.label}: {match.confidence}")
