@@ -1,14 +1,7 @@
 import cv2
 import numpy as np
-import argparse
 from tensorflow.lite.python.interpreter import Interpreter
-import tensorflow as tf
-import tensorflow_hub as hub
-import sys
 import os
-
-from . import aiy
-import importlib.resources as pkg_resources
 
 class ClassifyBird():
     def __init__(self):
