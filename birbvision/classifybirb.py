@@ -5,13 +5,23 @@ from tensorflow.lite.python.interpreter import Interpreter
 import tensorflow as tf
 import tensorflow_hub as hub
 import sys
+import os
+
+from . import aiy
+import importlib.resources as pkg_resources
 
 def load_labels(filename):
   with open(filename, 'r') as f:
     return [line.strip() for line in f.readlines()]
 
-interpreter = Interpreter(model_path="./model/aiy/lite-model_aiy_vision_classifier_birds_V1_3.tflite")
-labels = load_labels("./model/aiy/probability-labels-en.txt")
+model_path = f"{os.path.dirname(__file__)}/aiy/lite-model_aiy_vision_classifier_birds_V1_3.tflite"
+label_path = f"{os.path.dirname(__file__)}/aiy/probability-labels-en.txt"
+
+print(f"[model_path] {model_path}")
+print(f"[label_path] {label_path}")
+
+interpreter = Interpreter(model_path=model_path)
+labels = load_labels(label_path)
 
 interpreter.allocate_tensors()
 
@@ -27,7 +37,7 @@ input_mean = 127.5
 input_std = 127.5
 
 def load_and_classify(path):
-    image = cv2.imread(args.path)
+    image = cv2.imread(path)
     return classify_array(image)
 
 def classify_array(image):
@@ -61,5 +71,5 @@ if __name__ == "__main__":
     parser.add_argument('path', help="Path of the file to classify")
     args = parser.parse_args()
 
-    print(f"Classifying: {args.path}")
+    print(f"[Classifying] {args.path}")
     load_and_classify(args.path)
