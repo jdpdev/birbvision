@@ -5,5 +5,4 @@ setup(name='birbvision',
       description='Bird classifier for Birbvision',
       author='Jason DuPertuis',
       author_email='jdpdev@jdpdev.net',
-      packages=['tensorflow', 'opencv-python', 'numpy'],
      )
