@@ -9,6 +9,7 @@ if __name__ == "__main__":
     print(f"Classifying: {args.path}")
     classifier = ClassifyBird()
     matches = classifier.classify_path(args.path)
+    top = matches.get_top_results(5)
 
-    for match in matches:
-        print(f"{match.label}: {match.confidence}")
+    for match in top:
+        print(f"{match.label}: {match.confidence} ({match.confidenceDelta})")

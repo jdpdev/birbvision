@@ -3,6 +3,54 @@ import numpy as np
 from tensorflow.lite.python.interpreter import Interpreter
 import os
 
+class ClassifyResult():
+    def __init__(self, label, confidence, lastConfidence):
+        self._label = label
+        self._confidence = confidence
+
+        if lastConfidence != None:
+            self._confidenceDelta = confidence - lastConfidence
+        else:
+            self._confidenceDelta = None
+
+    @property
+    def label(self):
+        return self._label
+
+    @property
+    def confidence(self):
+        return self._confidence
+
+    @property
+    def confidenceDelta(self):
+        return self._confidenceDelta
+
+class ClassifyResultSet():
+    def __init__(self, results, labels):
+        def result_map(i):
+            if results[i] <= 1:
+                return (labels[i], results[i])
+            else:
+                return (labels[i], results[i] / 255.0)
+
+        sort = results.argsort()
+        self.results = list(map(result_map, sort))
+
+    def get_top_results(self, count):
+        resultRange = range(count)
+        return list(map(lambda i: self.get_result(i), resultRange))
+
+    def get_result(self, index) -> ClassifyResult:
+        if index >= len(self.results) - 1:
+            return None
+
+        index = index + 1
+
+        result = self.results[-index]
+        last = self.results[-(index + 1)]
+
+        return ClassifyResult(result[0], result[1], last[1])
+
 class ClassifyBird():
     def __init__(self):
         model_path = f"{os.path.dirname(__file__)}/aiy/lite-model_aiy_vision_classifier_birds_V1_3.tflite"
@@ -38,7 +86,7 @@ class ClassifyBird():
     def classify_image(self, image):
         return self.__classify_array(image)
 
-    def __classify_array(self, image):
+    def __classify_array(self, image) -> ClassifyResultSet:
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         imH, imW, _ = image.shape
         image_resized = cv2.resize(image_rgb, (self.width, self.height))
@@ -53,26 +101,4 @@ class ClassifyBird():
         output_data = self.interpreter.get_tensor(self.output_details[0]['index'])
         results = np.squeeze(output_data)
 
-        def result_map(i):
-            if self.floating_model:
-                return ClassifyResult(self.labels[i], results[i])
-            else:
-                return ClassifyResult(self.labels[i], results[i] / 255.0)
-
-        top_k = results.argsort()[-5:][::-1]
-        top_matches = map(result_map, top_k)
-
-        return top_matches
-
-class ClassifyResult():
-    def __init__(self, label, confidence):
-        self._label = label
-        self._confidence = confidence
-
-    @property
-    def label(self):
-        return self._label
-
-    @property
-    def confidence(self):
-        return self._confidence
+        return ClassifyResultSet(results, self.labels)
